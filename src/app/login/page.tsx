@@ -5,13 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -66,7 +65,6 @@ export default function LoginPage() {
               </div>
             </div>
             <Button
-              onClick={() => router.push('/dashboard')}
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg mt-2"
               disabled={loading}
@@ -74,7 +72,15 @@ export default function LoginPage() {
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
-     
+          <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+            <div className="mb-2 text-gray-700 font-semibold">Vercel Deployment Details</div>
+            <div className="text-xs text-gray-500">
+              <div>Default Admin: <span className="font-mono">admin@vercel.com</span></div>
+              <div>Password: <span className="font-mono">vercel123</span></div>
+              <div>Deployed on: <span className="font-mono">Vercel</span></div>
+              <div>URL: <span className="font-mono">https://your-vercel-app.vercel.app</span></div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
