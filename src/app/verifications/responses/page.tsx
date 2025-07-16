@@ -10,18 +10,14 @@ import {
   Filter, 
   Eye, 
   FileText,
-  Shield,
   CheckCircle,
   XCircle,
   Clock,
   User,
   Phone,
   Mail,
-  Calendar,
-  AlertCircle
 } from 'lucide-react';
 import AdminSidebarLayout from '@/components/layout/AdminSidebarLayout';
-import { fetchVerificationResponsesByVerificationId } from '@/lib/api/verifications';
 import Link from 'next/link';
 
 interface VerificationResponse {

@@ -8,8 +8,6 @@ import {
   Building, 
   FileText,
   ArrowRight,
-  TrendingUp,
-  TrendingDown,
   Activity
 } from 'lucide-react';
 import Link from 'next/link';
@@ -118,23 +116,10 @@ const DashboardPage = () => {
                       <Icon className={`w-5 h-5 ${stat.color}`} />
                       {stat.title}
                     </CardTitle>
-                    <div className={`p-2 rounded-lg ${stat.bgColor} shadow-sm`}>
-                      {stat.trend === 'up' ? (
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 text-red-600" />
-                      )}
-                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-extrabold text-blue-900 animate-fade-in">
                       {loading ? <span className="animate-pulse">...</span> : stat.value}
-                    </div>
-                    <div className="flex items-center space-x-2 text-xs mt-2">
-                      <span className={stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}>
-                        {stat.change}
-                      </span>
-                   
                     </div>
                   </CardContent>
                 </Card>

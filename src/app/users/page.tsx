@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Edit, Users, UserCheck, Building, Mail, Phone } from 'lucide-react';
 import AdminSidebarLayout from '@/components/layout/AdminSidebarLayout';
 import DataTable, { ColumnConfig } from '@/components/ui/DataTable';
+import { useState, useEffect } from 'react';
 
 interface User {
   _id: string;
@@ -20,6 +21,15 @@ interface User {
 }
 
 const UsersPage = () => {
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    // Replace with your actual API call
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => setUsers(data));
+  }, []);
+
   const getUserTypeBadge = (accountType: string | undefined | null) => {
     if (!accountType) {
       return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
@@ -50,7 +60,7 @@ const UsersPage = () => {
 
   const columns: ColumnConfig<User>[] = [
     {
-      key: 'name',
+      key: 'name' as any,
       label: 'User',
       render: (_value, row) => (
         <div className="flex items-center">
@@ -83,20 +93,20 @@ const UsersPage = () => {
     {
       key: 'accountType',
       label: 'Type',
-      render: (value: string) => getUserTypeBadge(value),
+      render: (value, _row) => getUserTypeBadge(typeof value === 'string' ? value : ''),
     },
     {
       key: 'status',
       label: 'Status',
-      render: (value: string) => getStatusBadge(value),
+      render: (value, _row) => getStatusBadge(typeof value === 'string' ? value : ''),
     },
     {
       key: 'createdAt',
       label: 'Joined',
-      render: (value: string) => new Date(value).toLocaleDateString(),
+      render: (value, _row) => typeof value === 'string' ? new Date(value).toLocaleDateString() : '',
     },
     {
-      key: 'actions_user',
+      key: 'actions_user' as any,
       label: 'Actions',
       render: () => (
         <div className="flex gap-2">
@@ -149,7 +159,9 @@ const UsersPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Landlords</p>
-                  <p className="text-2xl font-bold text-gray-900">{columns.filter(c => c.key === 'accountType' && c.render(c.value) === getUserTypeBadge('landlord')).length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {users.filter(u => u.accountType === 'landlord').length}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -162,7 +174,9 @@ const UsersPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Tenants</p>
-                  <p className="text-2xl font-bold text-gray-900">{columns.filter(c => c.key === 'accountType' && c.render(c.value) === getUserTypeBadge('tenant')).length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {users.filter(u => u.accountType === 'tenant').length}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -175,7 +189,9 @@ const UsersPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Active</p>
-                  <p className="text-2xl font-bold text-gray-900">{columns.filter(c => c.key === 'status' && c.render(c.value) === getStatusBadge('active')).length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {users.filter(u => u.status === 'active').length}
+                  </p>
                 </div>
               </div>
             </CardContent>

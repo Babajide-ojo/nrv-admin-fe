@@ -32,7 +32,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     verifyAffordability,
     amlScreening,
     loading,
-    error,
+    error: verificationsError,
   } = useVerifications();
 
   // Tab state
@@ -40,24 +40,25 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
 
   // Local state for each action result
   const [nin, setNin] = useState('');
-  const [ninResult, setNinResult] = useState<unknown>(null);
+  const [ninResult, setNinResult] = useState<string | null>(null);
   const [bvn, setBvn] = useState('');
-  const [bvnResult, setBvnResult] = useState<unknown>(null);
+  const [bvnResult, setBvnResult] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
-  const [phoneResult, setPhoneResult] = useState<unknown>(null);
+  const [phoneResult, setPhoneResult] = useState<string | null>(null);
   const [dl, setDl] = useState('');
-  const [dlResult, setDlResult] = useState<unknown>(null);
+  const [dlResult, setDlResult] = useState<string | null>(null);
   const [vin, setVin] = useState('');
-  const [vinResult, setVinResult] = useState<unknown>(null);
+  const [vinResult, setVinResult] = useState<string | null>(null);
   const [employment, setEmployment] = useState('');
-  const [employmentResult, setEmploymentResult] = useState<unknown>(null);
+  const [employmentResult, setEmploymentResult] = useState<string | null>(null);
   const [guarantor, setGuarantor] = useState('');
-  const [guarantorResult, setGuarantorResult] = useState<unknown>(null);
+  const [guarantorResult, setGuarantorResult] = useState<string | null>(null);
   const [income, setIncome] = useState('');
-  const [affordabilityResult, setAffordabilityResult] = useState<unknown>(null);
+  const [affordabilityResult, setAffordabilityResult] = useState<string | null>(null);
   const [aml, setAml] = useState('');
-  const [amlResult, setAmlResult] = useState<unknown>(null);
+  const [amlResult, setAmlResult] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Toast auto-dismiss
   React.useEffect(() => {
@@ -75,7 +76,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyNIN({ nin });
-      setNinResult(res);
+      setNinResult(res as string | null);
       showToast('success', 'NIN verification successful!');
     } catch (err) {
       showToast('error', 'NIN verification failed.');
@@ -85,7 +86,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyBVN({ bvn });
-      setBvnResult(res);
+      setBvnResult(res as string | null);
       showToast('success', 'BVN verification successful!');
     } catch (err) {
       showToast('error', 'BVN verification failed.');
@@ -95,7 +96,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyPhone({ phone });
-      setPhoneResult(res);
+      setPhoneResult(res as string | null);
       showToast('success', 'Phone verification successful!');
     } catch (err) {
       showToast('error', 'Phone verification failed.');
@@ -105,7 +106,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyDL({ dl });
-      setDlResult(res);
+      setDlResult(res as string | null);
       showToast('success', 'DL verification successful!');
     } catch (err) {
       showToast('error', 'DL verification failed.');
@@ -115,7 +116,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyVIN({ vin });
-      setVinResult(res);
+      setVinResult(res as string | null);
       showToast('success', 'VIN verification successful!');
     } catch (err) {
       showToast('error', 'VIN verification failed.');
@@ -125,7 +126,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyEmployment(verification.id, { employer: employment });
-      setEmploymentResult(res);
+      setEmploymentResult(res as string | null);
       showToast('success', 'Employment verification successful!');
     } catch (err) {
       showToast('error', 'Employment verification failed.');
@@ -135,7 +136,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyGuarantor(verification.id, { guarantor });
-      setGuarantorResult(res);
+      setGuarantorResult(res as string | null);
       showToast('success', 'Guarantor verification successful!');
     } catch (err) {
       showToast('error', 'Guarantor verification failed.');
@@ -145,7 +146,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await verifyAffordability(verification.id, { income });
-      setAffordabilityResult(res);
+      setAffordabilityResult(res as string | null);
       showToast('success', 'Affordability verification successful!');
     } catch (err) {
       showToast('error', 'Affordability verification failed.');
@@ -155,7 +156,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
     e.preventDefault();
     try {
       const res = await amlScreening({ aml });
-      setAmlResult(res);
+      setAmlResult(res as string | null);
       showToast('success', 'AML screening successful!');
     } catch (err) {
       showToast('error', 'AML screening failed.');
@@ -262,7 +263,9 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
       </div>
       {/* Tab Content */}
       <div id={`tab-panel-${activeTab}`} role="tabpanel">
-        {tabContent[activeTab]}
+        {React.isValidElement(tabContent[activeTab])
+          ? tabContent[activeTab]
+          : null}
       </div>
       {/* Toast */}
       {toast && (

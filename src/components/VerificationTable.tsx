@@ -10,6 +10,7 @@ interface VerificationTableProps {
 export const VerificationTable: React.FC<VerificationTableProps> = ({ onSelectVerification }) => {
   const { listVerifications, loading, error, data } = useVerifications();
   const [verifications, setVerifications] = React.useState<Verification[]>([]);
+  const [errorState, setErrorState] = React.useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -38,9 +39,11 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({ onSelectVe
               <td colSpan={6} className="text-center py-4">Loading...</td>
             </tr>
           )}
-          {error && (
+          {(error as string | null) && (
             <tr>
-              <td colSpan={6} className="text-center text-red-600 py-4">Error loading verifications.</td>
+              <td colSpan={6} className="text-center text-red-600 py-4">
+                {typeof error === 'string' ? error : 'Error loading verifications.'}
+              </td>
             </tr>
           )}
           {!loading && !error && verifications.length === 0 && (

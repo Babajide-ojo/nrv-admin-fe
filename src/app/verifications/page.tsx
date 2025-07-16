@@ -15,6 +15,7 @@ import AdminSidebarLayout from '@/components/layout/AdminSidebarLayout';
 import { fetchVerifications, Verification } from '@/lib/api/verifications';
 import DataTable, { ColumnConfig } from '@/components/ui/DataTable';
 import { useRouter } from 'next/navigation';
+import * as LabelPrimitive from "@radix-ui/react-label";
 
 interface VerificationWithUser extends Verification {
   _id?: string;

@@ -12,8 +12,8 @@ interface VerificationActionPanelProps {
   }>;
   onSubmit: (values: Record<string, string>) => Promise<unknown>;
   loading: boolean;
-  result: unknown;
-  error: unknown;
+  result: string | null;
+  error: string | null;
 }
 
 export const VerificationActionPanel: React.FC<VerificationActionPanelProps> = ({

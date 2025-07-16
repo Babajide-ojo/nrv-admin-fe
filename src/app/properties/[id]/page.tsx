@@ -181,7 +181,7 @@ const PropertyDetailsPage = () => {
               <div className="mt-10">
                 <h3 className="font-bold text-xl text-blue-900 mb-4 border-b border-blue-100 pb-2">Apartments / Rooms</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {(property.apartments as Apartment[]).map((room: unknown) => (
+                  {(property.apartments as Apartment[]).map((room: Apartment) => (
                     <Card key={room.roomId || room._id} className="border border-blue-100 bg-white shadow-md hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 rounded-2xl">
                       <CardContent className="p-6 space-y-3">
                         <div className="font-bold text-blue-800 text-lg mb-1 flex items-center gap-2">
