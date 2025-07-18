@@ -1,6 +1,10 @@
 import axios, { AxiosResponse } from 'axios';
 
-const API = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:9000';
+
+console.log(API);
+
+
 
 // --- Types ---
 export interface Verification {
