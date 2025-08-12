@@ -65,7 +65,7 @@ const AdminSidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -94,13 +94,13 @@ const AdminSidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children 
                   className={`
                     group flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200
                     ${isActive 
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' 
+                      ? 'bg-green-50 text-green-700 border-r-2 border-green-700' 
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                     }
                   `}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-green-700' : 'text-gray-400 group-hover:text-gray-600'}`} />
                   <div className="flex-1">
                     <div className="font-medium">{item.label}</div>
                     <div className="text-xs text-gray-500">{item.description}</div>
@@ -132,7 +132,7 @@ const AdminSidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children 
               <Menu className="w-6 h-6" />
             </button>
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <span className="font-semibold text-gray-900">Admin Panel</span>

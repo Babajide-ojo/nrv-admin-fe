@@ -62,7 +62,7 @@ export const VerificationTable: React.FC<VerificationTableProps> = ({ onSelectVe
                 <Button
                   onClick={() => onSelectVerification(verification)}
                   aria-label="View Details"
-                  className="text-blue-600 hover:underline"
+                  className="text-green-600 hover:underline"
                 >
                   View Details
                 </Button>

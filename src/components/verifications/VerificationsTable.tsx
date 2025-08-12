@@ -48,7 +48,7 @@ const VerificationsTable = () => {
               <td className="px-4 py-2 border-b">
                 <a
                   href={`/verifications/${v.id}`}
-                  className="text-blue-600 hover:underline focus:outline-none"
+                  className="text-green-600 hover:underline focus:outline-none"
                   tabIndex={0}
                   aria-label="View details"
                 >

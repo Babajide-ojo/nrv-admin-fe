@@ -250,7 +250,7 @@ export const VerificationForms: React.FC<VerificationFormsProps> = ({ verificati
         {TABS.map(tab => (
           <button
             key={tab.key}
-            className={`px-3 py-1 rounded-t font-medium focus:outline-none ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            className={`px-3 py-1 rounded-t font-medium focus:outline-none ${activeTab === tab.key ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             onClick={() => setActiveTab(tab.key)}
             role="tab"
             aria-selected={activeTab === tab.key}

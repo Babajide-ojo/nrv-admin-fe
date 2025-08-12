@@ -38,7 +38,7 @@ const UsersPage = () => {
       case 'landlord':
         return <Badge className="bg-purple-100 text-purple-800">Landlord</Badge>;
       case 'tenant':
-        return <Badge className="bg-blue-100 text-blue-800">Tenant</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Tenant</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{accountType}</Badge>;
     }
@@ -64,8 +64,8 @@ const UsersPage = () => {
       label: 'User',
       render: (_value, row) => (
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-            <Users className="w-4 h-4 text-blue-600" />
+          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+            <Users className="w-4 h-4 text-green-600" />
           </div>
           <div className="ml-3">
             <p className="font-medium text-gray-900">{row.firstName} {row.lastName}</p>
@@ -110,7 +110,7 @@ const UsersPage = () => {
       label: 'Actions',
       render: () => (
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+          <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
             <Eye className="w-4 h-4" />
           </Button>
           <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50">
@@ -130,7 +130,7 @@ const UsersPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Users</h1>
             <p className="text-gray-600 mt-1">Manage tenants and landlords</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-green-600 hover:bg-green-700">
             <Users className="w-4 h-4 mr-2" />
             Add User
           </Button>
@@ -141,8 +141,8 @@ const UsersPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Users</p>

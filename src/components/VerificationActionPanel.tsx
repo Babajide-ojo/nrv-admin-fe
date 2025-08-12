@@ -54,7 +54,7 @@ export const VerificationActionPanel: React.FC<VerificationActionPanelProps> = (
               required={field.required}
               value={values[field.name] || ''}
               onChange={handleChange}
-              className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+              className="border rounded px-3 py-2 focus:outline-none focus:ring focus:border-green-400"
               aria-label={field.label}
             />
           </div>

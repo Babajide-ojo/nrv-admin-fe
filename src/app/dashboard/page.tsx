@@ -100,7 +100,7 @@ const DashboardPage = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-extrabold text-blue-900 tracking-tight drop-shadow-lg">Dashboard</h1>
+          <h1 className="text-4xl font-extrabold text-green-900 tracking-tight drop-shadow-lg">Dashboard</h1>
           <p className="text-gray-600 mt-1 text-lg">Welcome to the admin dashboard</p>
         </div>
 
@@ -112,13 +112,13 @@ const DashboardPage = () => {
               <Link key={index} href={stat.href} className="block">
                 <Card className="hover:shadow-xl transition-all duration-200 hover:-translate-y-1 cursor-pointer bg-white/60 backdrop-blur-lg border-0 rounded-2xl">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-base font-semibold text-blue-900 flex items-center gap-2">
+                    <CardTitle className="text-base font-semibold text-green-900 flex items-center gap-2">
                       <Icon className={`w-5 h-5 ${stat.color}`} />
                       {stat.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-extrabold text-blue-900 animate-fade-in">
+                    <div className="text-3xl font-extrabold text-green-900 animate-fade-in">
                       {loading ? <span className="animate-pulse">...</span> : stat.value}
                     </div>
                   </CardContent>
@@ -130,7 +130,7 @@ const DashboardPage = () => {
 
         {/* Quick Actions */}
         <div>
-          <h2 className="text-2xl font-bold text-blue-900 mb-4">Quick Actions</h2>
+          <h2 className="text-2xl font-bold text-green-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => {
               const Icon = action.icon;
@@ -143,7 +143,7 @@ const DashboardPage = () => {
                           <Icon className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-blue-900">{action.title}</h3>
+                          <h3 className="font-semibold text-green-900">{action.title}</h3>
                           <p className="text-sm text-gray-500">{action.description}</p>
                         </div>
                         <ArrowRight className="w-5 h-5 text-gray-400" />
@@ -158,7 +158,7 @@ const DashboardPage = () => {
 
         {/* Recent Activity */}
         <div>
-          <h2 className="text-2xl font-bold text-blue-900 mb-4">Recent Activity</h2>
+          <h2 className="text-2xl font-bold text-green-900 mb-4">Recent Activity</h2>
           <Card className="bg-white/60 backdrop-blur-lg border-0 rounded-2xl">
             <CardHeader>
               <div className="flex items-center space-x-2">

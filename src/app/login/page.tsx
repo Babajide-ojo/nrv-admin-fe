@@ -19,11 +19,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-slate-100">
       <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-lg rounded-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl font-bold text-blue-900">
-            <Shield className="text-blue-500 text-3xl" /> Admin Login
+          <CardTitle className="flex items-center gap-2 text-2xl font-bold text-green-900">
+            <Shield className="text-green-500 text-3xl" /> Admin Login
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -66,7 +66,7 @@ export default function LoginPage() {
             </div>
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg mt-2"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg mt-2"
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}

@@ -59,7 +59,7 @@ const PropertiesPage = () => {
     
     switch (type.toLowerCase()) {
       case 'apartment':
-        return <Badge className="bg-blue-100 text-blue-800">Apartment</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Apartment</Badge>;
       case 'house':
         return <Badge className="bg-green-100 text-green-800">House</Badge>;
       case 'commercial':
@@ -92,8 +92,8 @@ const PropertiesPage = () => {
       label: 'Property',
       render: (value, row) => (
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Building className="w-4 h-4 text-blue-600" />
+          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <Building className="w-4 h-4 text-green-600" />
           </div>
           <div className="ml-3">
             <p className="font-medium text-gray-900">{row.propertyName}</p>
@@ -161,7 +161,7 @@ const PropertiesPage = () => {
     return (
       <AdminSidebarLayout>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
         </div>
       </AdminSidebarLayout>
     );
@@ -176,7 +176,7 @@ const PropertiesPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Properties</h1>
             <p className="text-gray-600 mt-1">Manage all properties and units</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-green-600 hover:bg-green-700">
             <Building className="w-4 h-4 mr-2" />
             Add Property
           </Button>
@@ -187,8 +187,8 @@ const PropertiesPage = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Building className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Building className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Properties</p>
