@@ -31,8 +31,6 @@ const VerificationsTable = () => {
       <table className="min-w-full bg-white border rounded">
         <thead>
           <tr>
-            <th className="px-4 py-2 border-b">ID</th>
-            <th className="px-4 py-2 border-b">User ID</th>
             <th className="px-4 py-2 border-b">Status</th>
             <th className="px-4 py-2 border-b">Created At</th>
             <th className="px-4 py-2 border-b">Actions</th>
@@ -41,8 +39,6 @@ const VerificationsTable = () => {
         <tbody>
           {verifications.map((v) => (
             <tr key={v.id} className="hover:bg-gray-50">
-              <td className="px-4 py-2 border-b">{v.id}</td>
-              <td className="px-4 py-2 border-b">{v.userId}</td>
               <td className="px-4 py-2 border-b">{v.status}</td>
               <td className="px-4 py-2 border-b">{new Date(v.createdAt).toLocaleString()}</td>
               <td className="px-4 py-2 border-b">

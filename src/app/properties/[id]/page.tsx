@@ -76,7 +76,7 @@ const PropertyDetailsPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-4xl font-extrabold text-green-900 tracking-tight drop-shadow-lg">
               <Building className="text-green-500 text-5xl" />
-              {property.propertyName || (property.apartments && property.apartments[0]?.description) || 'Unnamed Property'}
+              {[property.streetAddress, property.city, property.state].filter(Boolean).join(', ') || (property.apartments && property.apartments[0]?.description) || 'Property'}
             </CardTitle>
             <div className="flex items-center gap-2 mt-2">
               {getPropertyTypeBadge(property.propertyType)}
@@ -108,7 +108,7 @@ const PropertyDetailsPage = () => {
               <div className="flex-1 space-y-6">
                 <div className="flex items-center gap-2 text-gray-700 text-lg">
                   <MapPin className="w-5 h-5 text-green-400" />
-                  <span>{property.streetAddress}, {property.city}, {property.state}, {property.zipCode}</span>
+                  <span>{property.streetAddress}, {property.city}, {property.state}</span>
                 </div>
                 {property.apartments && property.apartments[0]?.description && (
                   <div className="text-gray-700 text-base">

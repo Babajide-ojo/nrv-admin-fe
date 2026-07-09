@@ -1,19 +1,55 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import AdminSidebarLayout from '@/components/layout/AdminSidebarLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { fetchVerificationById, fetchVerificationResponsesByVerificationId, Verification, verifyPhoneNumber } from '../../../lib/api/verifications';
+import { fetchVerificationById, fetchVerificationResponsesByVerificationId, Verification, verifyPhoneNumber, verifyNin } from '../../../lib/api/verifications';
 import { Button } from '@/components/ui/button';
-import { HiUser, HiOfficeBuilding, HiUserGroup, HiDocumentText } from 'react-icons/hi';
+import { HiUser, HiOfficeBuilding, HiUserGroup, HiDocumentText, HiArrowLeft } from 'react-icons/hi';
 import { FaRegAddressCard } from 'react-icons/fa';
-import { FiPhone } from 'react-icons/fi';
+import { FiPhone, FiHash } from 'react-icons/fi';
 import {
   updatePersonalReport,
   updateEmploymentReport,
   updateGuarantorReport,
   updateDocumentsReport,
+  updateVerification,
 } from '../../../lib/api/verifications';
+
+// Reusable UI bits for consistent verification detail layout
+const InfoRow = ({ label, value, valueClassName = 'text-gray-900' }: { label: string; value: React.ReactNode; valueClassName?: string }) => (
+  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 py-2.5 border-b border-gray-100 last:border-0">
+    <span className="text-sm font-medium text-gray-500 shrink-0 sm:w-36">{label}</span>
+    <span className={`text-sm ${valueClassName}`}>{value ?? '—'}</span>
+  </div>
+);
+
+const SectionHeader = ({ icon: Icon, title, iconClassName = 'text-slate-500' }: { icon: React.ElementType; title: string; iconClassName?: string }) => (
+  <div className="flex items-center gap-3 mb-4">
+    <div className={`p-2 rounded-lg bg-slate-100 ${iconClassName}`}>
+      <Icon className="w-5 h-5" />
+    </div>
+    <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+  </div>
+);
+
+const StatusBadge = ({ status, className = '' }: { status: string; className?: string }) => {
+  const s = String(status).toLowerCase();
+  const styles = s === 'approved' || s === 'completed' || s === 'success'
+    ? 'bg-emerald-100 text-emerald-800'
+    : s === 'rejected'
+    ? 'bg-red-100 text-red-800'
+    : 'bg-amber-100 text-amber-800';
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${styles} ${className}`}>
+      {status}
+    </span>
+  );
+};
+
+const SectionCard = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
+  <div className={`rounded-xl border border-slate-200 bg-white p-6 ${className}`}>{children}</div>
+);
 
 type ReportModalProps = {
   open: boolean;
@@ -71,6 +107,7 @@ type VerificationResponseWithReports = Record<string, unknown> & {
 
 const VerificationDetailsPage = () => {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const [verification, setVerification] = useState<Verification | null>(null);
   const [responses, setResponses] = useState<VerificationResponseWithReports[]>([]);
@@ -101,14 +138,26 @@ const VerificationDetailsPage = () => {
   }, [id]);
 
   const handleAction = async (action: 'approve' | 'reject' | 'request-info') => {
+    if (!id) return;
     setActionLoading(true);
     try {
-      // Replace with actual API call for each action
-      await new Promise(res => setTimeout(res, 1000));
-      setToast({ type: 'success', message: `Verification ${action.replace('-', ' ')}d successfully!` });
+      const statusMap = {
+        approve: 'approved' as const,
+        reject: 'rejected' as const,
+        'request-info': 'pending' as const,
+      };
+      const newStatus = statusMap[action];
+      const updated = await updateVerification(id, { status: newStatus });
+      setVerification(prev => (prev ? { ...prev, status: updated?.status ?? newStatus } : prev));
+      setToast({
+        type: 'success',
+        message: action === 'request-info'
+          ? 'Verification set back to pending. Applicant can be requested to provide more info.'
+          : `Verification ${action === 'approve' ? 'approved' : 'rejected'} successfully.`,
+      });
       setConfirmAction(null);
     } catch {
-      setToast({ type: 'error', message: `Failed to ${action.replace('-', ' ')} verification.` });
+      setToast({ type: 'error', message: `Failed to ${action === 'approve' ? 'approve' : action === 'reject' ? 'reject' : 'update'} verification.` });
     } finally {
       setActionLoading(false);
     }
@@ -171,12 +220,24 @@ const VerificationDetailsPage = () => {
 
   return (
     <AdminSidebarLayout>
-      <div className="max-w-3xl mx-auto py-8">
-        <Card className="mb-8 shadow-2xl border-0 bg-gradient-to-br from-white via-slate-50 to-blue-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl font-bold text-blue-900">
-              <HiDocumentText className="text-blue-500 text-3xl" /> Verification Responses
-            </CardTitle>
+      <div className="max-w-3xl mx-auto py-8 px-4">
+        <div className="mb-6">
+          <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-900 -ml-1" onClick={() => router.back()}>
+            <HiArrowLeft className="w-4 h-4 mr-1" />
+            Back
+          </Button>
+        </div>
+        <Card className="mb-8 shadow-sm border border-slate-200 bg-white overflow-hidden">
+          <CardHeader className="border-b border-slate-100 bg-slate-50/50">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="flex items-center gap-3 text-xl font-semibold text-slate-800">
+                <div className="p-2 rounded-lg bg-blue-100">
+                  <HiDocumentText className="w-5 h-5 text-blue-600" />
+                </div>
+                Verification Responses
+              </CardTitle>
+              <StatusBadge status={verification?.status ?? 'pending'} />
+            </div>
           </CardHeader>
           <CardContent>
             {responses.length === 0 ? (
@@ -186,200 +247,148 @@ const VerificationDetailsPage = () => {
                 {responses.map((resp, idx) => (
                   <div key={String(resp._id ?? idx)} className="rounded-2xl bg-white shadow-lg p-8 border border-slate-100 hover:shadow-2xl transition-shadow duration-200">
                     {/* Personal Info */}
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <HiUser className="text-blue-400 text-xl" />
-                        <h3 className="text-lg font-semibold text-blue-800 tracking-wide">Personal Information</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><span className="font-semibold">Full Name:</span> {String(resp.fullName ?? '')}</div>
-                        <div><span className="font-semibold">Email:</span> {String(resp.email ?? '')}</div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">Phone:</span> 
-                          <span>{String(resp.phone ?? '')}</span>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="ml-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
-                            onClick={async () => {
-                              try {
-                                await verifyPhoneNumber(String(resp._id), String(resp.phone));
-                                // Refresh the data
-                                const updatedResponses = await fetchVerificationResponsesByVerificationId(id);
-                                setResponses(updatedResponses);
-                                setToast({ type: 'success', message: 'Phone verification completed!' });
-                              } catch {
-                                setToast({ type: 'error', message: 'Phone verification failed!' });
-                              }
-                            }}
-                          >
-                            <FiPhone className="w-4 h-4 mr-1" />
-                            Verify
-                          </Button>
-                        </div>
-                        <div><span className="font-semibold">Date of Birth:</span> {resp.dateOfBirth ? new Date(String(resp.dateOfBirth)).toLocaleDateString() : ''}</div>
-                        <div><span className="font-semibold">Gender:</span> {String(resp.gender ?? '')}</div>
-                        <div><span className="font-semibold">Address:</span> {String(resp.address ?? '')}</div>
-                      </div>
-                      {/* Phone Verification Result Display */}
-                      {resp.phoneVerificationResult && (
-                        <div className="mt-4 p-3 rounded bg-blue-50 border border-blue-100">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FiPhone className="text-blue-500" />
-                            <span className="font-semibold text-blue-800">Phone Verification Result</span>
-                          </div>
-                          <div className="text-sm">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium">Status:</span>
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                                resp.phoneVerificationStatus === 'completed' 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-red-100 text-red-700'
-                              }`}>
-                                {resp.phoneVerificationStatus || 'Unknown'}
+                    <SectionCard className="mb-6">
+                      <SectionHeader icon={HiUser} title="Personal Information" iconClassName="text-blue-500" />
+                      <div className="space-y-0 divide-y divide-slate-100">
+                        <InfoRow label="Full Name" value={String(resp.fullName ?? '')} />
+                        <InfoRow label="Email" value={String(resp.email ?? '')} />
+                        <InfoRow
+                          label="NIN"
+                          value={
+                            <span className="flex flex-wrap items-center gap-2">
+                              <span>
+                                {(resp as { nin?: string }).nin != null && String((resp as { nin?: string }).nin).trim()
+                                  ? "On file (redacted)"
+                                  : "—"}
                               </span>
-                            </div>
-                            {resp.phoneVerificationDate && (
-                              <div className="text-xs text-gray-600">
-                                Verified on: {new Date(String(resp.phoneVerificationDate)).toLocaleString()}
-                              </div>
+                              {(resp as { nin?: string }).nin &&
+                                (resp as { nin?: string }).nin !== "On file (redacted)" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                                  onClick={async () => {
+                                    try {
+                                      await verifyNin(String(resp._id), String((resp as { nin?: string }).nin));
+                                      const updatedResponses = await fetchVerificationResponsesByVerificationId(id);
+                                      setResponses(updatedResponses);
+                                      setToast({ type: 'success', message: 'NIN verification completed!' });
+                                    } catch {
+                                      setToast({ type: 'error', message: 'NIN verification failed!' });
+                                    }
+                                  }}
+                                >
+                                  <FiHash className="w-4 h-4 mr-1" />
+                                  Verify NIN
+                                </Button>
+                              )}
+                            </span>
+                          }
+                        />
+                        {resp.phone != null && resp.phone !== '' && (
+                          <InfoRow label="Phone" value={String(resp.phone)} />
+                        )}
+                        <InfoRow label="Date of Birth" value={resp.dateOfBirth ? new Date(String(resp.dateOfBirth)).toLocaleDateString() : ''} />
+                        <InfoRow label="Gender" value={String(resp.gender ?? '')} />
+                        <InfoRow label="Address" value={String(resp.address ?? '')} />
+                      </div>
+                      {/* NIN Verification Result Display */}
+                      {(resp as { ninVerificationResult?: Record<string, unknown>; ninVerificationStatus?: string; ninVerificationDate?: string | Date }).ninVerificationResult && (
+                        <div className="mt-6 pt-6 border-t border-slate-200">
+                          <SectionHeader icon={FiHash} title="NIN Verification Result" iconClassName="text-blue-500" />
+                          <div className="space-y-0 divide-y divide-slate-100">
+                            <InfoRow label="Status" value={<StatusBadge status={String((resp as { ninVerificationStatus?: string }).ninVerificationStatus || 'Unknown')} />} />
+                            {(resp as { ninVerificationDate?: string | Date }).ninVerificationDate && (
+                              <InfoRow label="Verified on" value={new Date(String((resp as { ninVerificationDate?: string | Date }).ninVerificationDate)).toLocaleString()} />
                             )}
-                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && 'originalPhone' in resp.phoneVerificationResult && resp.phoneVerificationResult.originalPhone && (
-                              <div className="text-xs text-gray-600">
-                                Original: {String(resp.phoneVerificationResult.originalPhone)}
-                              </div>
-                            )}
-                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && 'finalPhone' in resp.phoneVerificationResult && resp.phoneVerificationResult.finalPhone && resp.phoneVerificationResult.finalPhone !== resp.phoneVerificationResult.originalPhone && (
-                              <div className="text-xs text-blue-600">
-                                Replaced with: {String(resp.phoneVerificationResult.finalPhone)}
-                              </div>
-                            )}
-                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && 'error' in resp.phoneVerificationResult && resp.phoneVerificationResult.error && (
-                              <div className="text-xs text-red-600 mt-1">
-                                Error: {String(resp.phoneVerificationResult.error)}
-                              </div>
-                            )}
-                            {/* Display verification details in a structured format */}
-                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && (
-                              <div className="mt-2 p-3 bg-white rounded border">
-                                <div className="font-medium mb-2 text-blue-800">Verification Details:</div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                  {/* Status */}
-                                  {resp.phoneVerificationResult.status && (
-                                    <div>
-                                      <span className="font-medium text-gray-600">API Status:</span>
-                                      <span className={`ml-2 inline-block px-2 py-1 rounded text-xs font-medium ${
-                                        resp.phoneVerificationResult.status === 'success' 
-                                          ? 'bg-green-100 text-green-700' 
-                                          : 'bg-red-100 text-red-700'
-                                      }`}>
-                                        {String(resp.phoneVerificationResult.status)}
-                                      </span>
-                                    </div>
+                            {(() => {
+                              const nr = (resp as { ninVerificationResult?: Record<string, unknown> }).ninVerificationResult;
+                              if (!nr || typeof nr !== "object") return null;
+                              return (
+                                <>
+                                  {typeof nr.namesMatch === "boolean" && (
+                                    <InfoRow
+                                      label="Name match"
+                                      value={nr.namesMatch ? "Yes" : "No"}
+                                    />
                                   )}
-                                  
-                                                                     {/* Entity Information */}
-                                   {resp.phoneVerificationResult.entity && typeof resp.phoneVerificationResult.entity === 'object' && 'first_name' in resp.phoneVerificationResult.entity && (
-                                     <>
-                                       {resp.phoneVerificationResult.entity.first_name && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">First Name:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.entity.first_name)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.entity.last_name && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Last Name:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.entity.last_name)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.entity.middle_name && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Middle Name:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.entity.middle_name)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.entity.date_of_birth && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Date of Birth:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.entity.date_of_birth)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.entity.gender && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Gender:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.entity.gender)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.entity.phone_number && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Verified Phone:</span>
-                                           <span className="ml-2 text-blue-600 font-medium">{String(resp.phoneVerificationResult.entity.phone_number)}</span>
-                                         </div>
-                                       )}
-                                     </>
-                                   )}
-                                  
-                                                                     {/* Data Information (if different from entity) */}
-                                   {resp.phoneVerificationResult.data && typeof resp.phoneVerificationResult.data === 'object' && resp.phoneVerificationResult.data.entity && typeof resp.phoneVerificationResult.data.entity === 'object' && 'first_name' in resp.phoneVerificationResult.data.entity && (
-                                     <>
-                                       {resp.phoneVerificationResult.data.entity.first_name && !resp.phoneVerificationResult.entity?.first_name && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">First Name:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.data.entity.first_name)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.data.entity.last_name && !resp.phoneVerificationResult.entity?.last_name && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Last Name:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.data.entity.last_name)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.data.entity.middle_name && !resp.phoneVerificationResult.entity?.middle_name && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Middle Name:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.data.entity.middle_name)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.data.entity.date_of_birth && !resp.phoneVerificationResult.entity?.date_of_birth && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Date of Birth:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.data.entity.date_of_birth)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.data.entity.gender && !resp.phoneVerificationResult.entity?.gender && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Gender:</span>
-                                           <span className="ml-2">{String(resp.phoneVerificationResult.data.entity.gender)}</span>
-                                         </div>
-                                       )}
-                                       {resp.phoneVerificationResult.data.entity.phone_number && !resp.phoneVerificationResult.entity?.phone_number && (
-                                         <div>
-                                           <span className="font-medium text-gray-600">Verified Phone:</span>
-                                           <span className="ml-2 text-blue-600 font-medium">{String(resp.phoneVerificationResult.data.entity.phone_number)}</span>
-                                         </div>
-                                       )}
-                                     </>
-                                   )}
-                                </div>
-                              </div>
-                            )}
+                                  {typeof nr.dobMatch === "boolean" && (
+                                    <InfoRow label="DOB match" value={nr.dobMatch ? "Yes" : "No"} />
+                                  )}
+                                </>
+                              );
+                            })()}
+                            {(() => {
+                              const nr = (resp as { ninVerificationResult?: Record<string, unknown> }).ninVerificationResult;
+                              if (!nr || typeof nr !== 'object' || nr.error == null) return null;
+                              return <InfoRow label="Error" value="Verification failed — details redacted" valueClassName="text-red-600" />;
+                            })()}
                           </div>
                         </div>
                       )}
-                    </div>
+                      {/* Phone Verification Result Display (legacy) */}
+                      {resp.phoneVerificationResult && (
+                        <div className="mt-6 pt-6 border-t border-slate-200">
+                          <SectionHeader icon={FiPhone} title="Phone Verification Result" iconClassName="text-blue-500" />
+                          <div className="space-y-0 divide-y divide-slate-100">
+                            <InfoRow label="Status" value={<StatusBadge status={resp.phoneVerificationStatus || 'Unknown'} />} />
+                            {resp.phoneVerificationDate && (
+                              <InfoRow label="Verified on" value={new Date(String(resp.phoneVerificationDate)).toLocaleString()} />
+                            )}
+                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && 'originalPhone' in resp.phoneVerificationResult && resp.phoneVerificationResult.originalPhone && (
+                              <InfoRow label="Original" value={String(resp.phoneVerificationResult.originalPhone)} valueClassName="text-slate-600" />
+                            )}
+                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && 'finalPhone' in resp.phoneVerificationResult && resp.phoneVerificationResult.finalPhone && resp.phoneVerificationResult.finalPhone !== resp.phoneVerificationResult.originalPhone && (
+                              <InfoRow label="Replaced with" value={String(resp.phoneVerificationResult.finalPhone)} valueClassName="text-blue-600 font-medium" />
+                            )}
+                            {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && 'error' in resp.phoneVerificationResult && resp.phoneVerificationResult.error && (
+                              <InfoRow label="Error" value={String(resp.phoneVerificationResult.error)} valueClassName="text-red-600" />
+                            )}
+                          </div>
+                          {resp.phoneVerificationResult && typeof resp.phoneVerificationResult === 'object' && (
+                            <div className="mt-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                              <div className="text-sm font-semibold text-slate-700 mb-3">Verification Details</div>
+                              <div className="space-y-0 divide-y divide-slate-200">
+                                {resp.phoneVerificationResult.status && (
+                                  <InfoRow label="API Status" value={<StatusBadge status={String(resp.phoneVerificationResult.status)} />} />
+                                )}
+                                {resp.phoneVerificationResult.entity && typeof resp.phoneVerificationResult.entity === 'object' && 'first_name' in resp.phoneVerificationResult.entity && (
+                                  <>
+                                    {resp.phoneVerificationResult.entity.first_name && <InfoRow label="First Name" value={String(resp.phoneVerificationResult.entity.first_name)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.entity.last_name && <InfoRow label="Last Name" value={String(resp.phoneVerificationResult.entity.last_name)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.entity.middle_name && <InfoRow label="Middle Name" value={String(resp.phoneVerificationResult.entity.middle_name)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.entity.date_of_birth && <InfoRow label="Date of Birth" value={String(resp.phoneVerificationResult.entity.date_of_birth)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.entity.gender && <InfoRow label="Gender" value={String(resp.phoneVerificationResult.entity.gender)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.entity.phone_number && <InfoRow label="Verified Phone" value={String(resp.phoneVerificationResult.entity.phone_number)} valueClassName="text-blue-600 font-medium" />}
+                                  </>
+                                )}
+                                {resp.phoneVerificationResult.data && typeof resp.phoneVerificationResult.data === 'object' && resp.phoneVerificationResult.data.entity && typeof resp.phoneVerificationResult.data.entity === 'object' && 'first_name' in resp.phoneVerificationResult.data.entity && (
+                                  <>
+                                    {resp.phoneVerificationResult.data.entity.first_name && !resp.phoneVerificationResult.entity?.first_name && <InfoRow label="First Name" value={String(resp.phoneVerificationResult.data.entity.first_name)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.data.entity.last_name && !resp.phoneVerificationResult.entity?.last_name && <InfoRow label="Last Name" value={String(resp.phoneVerificationResult.data.entity.last_name)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.data.entity.middle_name && !resp.phoneVerificationResult.entity?.middle_name && <InfoRow label="Middle Name" value={String(resp.phoneVerificationResult.data.entity.middle_name)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.data.entity.date_of_birth && !resp.phoneVerificationResult.entity?.date_of_birth && <InfoRow label="Date of Birth" value={String(resp.phoneVerificationResult.data.entity.date_of_birth)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.data.entity.gender && !resp.phoneVerificationResult.entity?.gender && <InfoRow label="Gender" value={String(resp.phoneVerificationResult.data.entity.gender)} valueClassName="text-slate-700" />}
+                                    {resp.phoneVerificationResult.data.entity.phone_number && !resp.phoneVerificationResult.entity?.phone_number && <InfoRow label="Verified Phone" value={String(resp.phoneVerificationResult.data.entity.phone_number)} valueClassName="text-blue-600 font-medium" />}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     {/* Personal Report Display */}
                     {(() => {
                       const report = resp.personalReport;
-                      if (report && typeof report === 'object' && report !== null && ("status" in report)) {
+                      if (report && typeof report === 'object' && report !== null && ('status' in report)) {
                         const typedReport = report as Report;
                         return (
-                          <div className="mb-2 p-3 rounded bg-blue-50 border border-blue-100 flex flex-col md:flex-row md:items-center md:justify-between">
-                            <div className="flex items-center gap-2 mb-2 md:mb-0">
-                              <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${typedReport.status === 'approved' ? 'bg-green-100 text-green-700' : typedReport.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{typedReport.status}</span>
-                              <span className="text-gray-700 font-medium">{typedReport.comment}</span>
+                          <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <StatusBadge status={typedReport.status} />
+                              <span className="text-slate-700 font-medium">{typedReport.comment}</span>
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-slate-500">
                               Reviewed by {typedReport.reviewedBy} on {typedReport.reviewedAt ? new Date(typedReport.reviewedAt).toLocaleString() : ''}
                             </div>
                           </div>
@@ -387,163 +396,151 @@ const VerificationDetailsPage = () => {
                       }
                       return null;
                     })()}
-                    <div className="flex md:justify-end mb-4 w-full">
+                    <div className="flex md:justify-end mt-4 w-full">
                       <Button
                         size="sm"
-                        className="bg-blue-100 text-blue-800 hover:bg-blue-200 w-full md:w-auto"
+                        className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
                         onClick={() => setModal({ group: 'Personal', responseId: String(resp._id) })}
                       >
                         Provide Verification Report
                       </Button>
                     </div>
-                    <div className="border-t my-6" />
-                    {/* Employment Info */}
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <HiOfficeBuilding className="text-green-400 text-xl" />
-                        <h3 className="text-lg font-semibold text-green-800 tracking-wide">Employment Information</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><span className="font-semibold">Status:</span> <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${resp.employmentStatus === 'Employed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{String(resp.employmentStatus ?? '')}</span></div>
-                        <div><span className="font-semibold">Role:</span> {String(resp.roleInCompany ?? '')}</div>
-                        <div><span className="font-semibold">Company Name:</span> {String(resp.companyName ?? '')}</div>
-                        <div><span className="font-semibold">Company Address:</span> {String(resp.companyAddress ?? '')}</div>
-                        <div><span className="font-semibold">Monthly Income:</span> {resp.monthlyIncome ? <span className="inline-block px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs">₦{Number(resp.monthlyIncome).toLocaleString()}</span> : ''}</div>
-                        <div><span className="font-semibold">Date Joined:</span> {String(resp.dateJoined ?? '')}</div>
-                      </div>
+                  </SectionCard>
+
+                  {/* Employment Info */}
+                  <SectionCard className="mb-6">
+                    <SectionHeader icon={HiOfficeBuilding} title="Employment Information" iconClassName="text-emerald-500" />
+                    <div className="space-y-0 divide-y divide-slate-100">
+                      <InfoRow label="Status" value={<StatusBadge status={String(resp.employmentStatus ?? '')} />} />
+                      <InfoRow label="Role" value={String(resp.roleInCompany ?? '')} />
+                      <InfoRow label="Company Name" value={String(resp.companyName ?? '')} />
+                      <InfoRow label="Company Address" value={String(resp.companyAddress ?? '')} />
+                      <InfoRow label="Monthly Income" value={resp.monthlyIncome ? <span className="font-medium text-emerald-700">₦{Number(resp.monthlyIncome).toLocaleString()}</span> : undefined} />
+                      <InfoRow label="Date Joined" value={String(resp.dateJoined ?? '')} />
                     </div>
-                    {/* Employment Report Display */}
                     {resp.employmentReport && (() => {
                       const report = resp.employmentReport;
-                      if (!report || typeof report !== 'object' || report === null || !("status" in report)) return null;
+                      if (!report || typeof report !== 'object' || report === null || !('status' in report)) return null;
                       const typedReport = report as Report;
                       return (
-                        <div className="mb-2 p-3 rounded bg-green-50 border border-green-100 flex flex-col md:flex-row md:items-center md:justify-between">
-                          <div className="flex items-center gap-2 mb-2 md:mb-0">
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${typedReport.status === 'approved' ? 'bg-green-100 text-green-700' : typedReport.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{typedReport.status}</span>
-                            <span className="text-gray-700 font-medium">{typedReport.comment}</span>
+                        <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatusBadge status={typedReport.status} />
+                            <span className="text-slate-700 font-medium">{typedReport.comment}</span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-slate-500">
                             Reviewed by {typedReport.reviewedBy} on {typedReport.reviewedAt ? new Date(typedReport.reviewedAt).toLocaleString() : ''}
                           </div>
                         </div>
                       );
                     })()}
-                    <div className="flex md:justify-end mb-4 w-full">
+                    <div className="flex md:justify-end mt-4 w-full">
                       <Button
                         size="sm"
-                        className="bg-green-100 text-green-800 hover:bg-green-200 w-full md:w-auto"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white w-full md:w-auto"
                         onClick={() => setModal({ group: 'Employment', responseId: String(resp._id) })}
                       >
                         Provide Verification Report
                       </Button>
                     </div>
-                    <div className="border-t my-6" />
-                    {/* Guarantor Info */}
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <HiUserGroup className="text-purple-400 text-xl" />
-                        <h3 className="text-lg font-semibold text-purple-800 tracking-wide">Guarantor Information</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div><span className="font-semibold">First Name:</span> {String(resp.guarantorFirstName ?? '')}</div>
-                        <div><span className="font-semibold">Last Name:</span> {String(resp.guarantorLastName ?? '')}</div>
-                        <div><span className="font-semibold">Phone:</span> {String(resp.guarantorPhone ?? '')}</div>
-                        <div><span className="font-semibold">Email:</span> {String(resp.guarantorEmail ?? '')}</div>
-                        <div><span className="font-semibold">Address:</span> {String(resp.guarantorAddress ?? '')}</div>
-                        <div><span className="font-semibold">Employment Status:</span> {String(resp.guarantorEmploymentStatus ?? '')}</div>
-                        <div><span className="font-semibold">Company:</span> {String(resp.guarantorCompany ?? '')}</div>
-                        <div><span className="font-semibold">Relationship:</span> {String(resp.guarantorRelationship ?? '')}</div>
-                      </div>
+                  </SectionCard>
+
+                  {/* Guarantor Info */}
+                  <SectionCard className="mb-6">
+                    <SectionHeader icon={HiUserGroup} title="Guarantor Information" iconClassName="text-violet-500" />
+                    <div className="space-y-0 divide-y divide-slate-100">
+                      <InfoRow label="First Name" value={String(resp.guarantorFirstName ?? '')} />
+                      <InfoRow label="Last Name" value={String(resp.guarantorLastName ?? '')} />
+                      <InfoRow label="Phone" value={String(resp.guarantorPhone ?? '')} />
+                      <InfoRow label="Email" value={String(resp.guarantorEmail ?? '')} />
+                      <InfoRow label="Address" value={String(resp.guarantorAddress ?? '')} />
+                      <InfoRow label="Employment Status" value={String(resp.guarantorEmploymentStatus ?? '')} />
+                      <InfoRow label="Company" value={String(resp.guarantorCompany ?? '')} />
+                      <InfoRow label="Relationship" value={String(resp.guarantorRelationship ?? '')} />
                     </div>
-                    {/* Guarantor Report Display */}
                     {resp.guarantorReport && (() => {
                       const report = resp.guarantorReport;
-                      if (!report || typeof report !== 'object' || report === null || !("status" in report)) return null;
+                      if (!report || typeof report !== 'object' || report === null || !('status' in report)) return null;
                       const typedReport = report as Report;
                       return (
-                        <div className="mb-2 p-3 rounded bg-purple-50 border border-purple-100 flex flex-col md:flex-row md:items-center md:justify-between">
-                          <div className="flex items-center gap-2 mb-2 md:mb-0">
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${typedReport.status === 'approved' ? 'bg-green-100 text-green-700' : typedReport.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{typedReport.status}</span>
-                            <span className="text-gray-700 font-medium">{typedReport.comment}</span>
+                        <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatusBadge status={typedReport.status} />
+                            <span className="text-slate-700 font-medium">{typedReport.comment}</span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-slate-500">
                             Reviewed by {typedReport.reviewedBy} on {typedReport.reviewedAt ? new Date(typedReport.reviewedAt).toLocaleString() : ''}
                           </div>
                         </div>
                       );
                     })()}
-                    <div className="flex md:justify-end mb-4 w-full">
+                    <div className="flex md:justify-end mt-4 w-full">
                       <Button
                         size="sm"
-                        className="bg-purple-100 text-purple-800 hover:bg-purple-200 w-full md:w-auto"
+                        className="bg-violet-600 hover:bg-violet-700 text-white w-full md:w-auto"
                         onClick={() => setModal({ group: 'Guarantor', responseId: String(resp._id) })}
                       >
                         Provide Verification Report
                       </Button>
                     </div>
-                    <div className="border-t my-6" />
-                    {/* Documents */}
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <FaRegAddressCard className="text-pink-400 text-xl" />
-                        <h3 className="text-lg font-semibold text-pink-800 tracking-wide">Documents</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <span className="font-semibold">Bank Statement:</span>{' '}
-                          {resp.bankStatementUrl ? (
-                            <a href={String(resp.bankStatementUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition-colors">View</a>
-                          ) : 'N/A'}
-                        </div>
-                        <div>
-                          <span className="font-semibold">Utility Bill:</span>{' '}
-                          {resp.utilityBillUrl ? (
-                            <a href={String(resp.utilityBillUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition-colors">View</a>
-                          ) : 'N/A'}
-                        </div>
-                        <div>
-                          <span className="font-semibold">ID Document:</span>{' '}
-                          {resp.identificationDocumentUrl ? (
-                            <a href={String(resp.identificationDocumentUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800 transition-colors">View</a>
-                          ) : 'N/A'}
-                        </div>
-                        <div>
-                          <span className="font-semibold">ID Type:</span> {String(resp.identificationDocumentType ?? '')}
-                        </div>
-                      </div>
+                  </SectionCard>
+
+                  {/* Documents */}
+                  <SectionCard className="mb-6">
+                    <SectionHeader icon={FaRegAddressCard} title="Documents" iconClassName="text-rose-500" />
+                    <div className="space-y-0 divide-y divide-slate-100">
+                      <InfoRow
+                        label="Bank Statement"
+                        value={resp.bankStatementUrl ? (
+                          <a href={String(resp.bankStatementUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">View</a>
+                        ) : undefined}
+                      />
+                      <InfoRow
+                        label="Utility Bill"
+                        value={resp.utilityBillUrl ? (
+                          <a href={String(resp.utilityBillUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">View</a>
+                        ) : undefined}
+                      />
+                      <InfoRow
+                        label="ID Document"
+                        value={resp.identificationDocumentUrl ? (
+                          <a href={String(resp.identificationDocumentUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline hover:text-blue-800">View</a>
+                        ) : undefined}
+                      />
+                      <InfoRow label="ID Type" value={String(resp.identificationDocumentType ?? '')} />
                     </div>
-                    {/* Documents Report Display */}
                     {resp.documentsReport && (() => {
                       const report = resp.documentsReport;
-                      if (!report || typeof report !== 'object' || report === null || !("status" in report)) return null;
+                      if (!report || typeof report !== 'object' || report === null || !('status' in report)) return null;
                       const typedReport = report as Report;
                       return (
-                        <div className="mb-2 p-3 rounded bg-pink-50 border border-pink-100 flex flex-col md:flex-row md:items-center md:justify-between">
-                          <div className="flex items-center gap-2 mb-2 md:mb-0">
-                            <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${typedReport.status === 'approved' ? 'bg-green-100 text-green-700' : typedReport.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{typedReport.status}</span>
-                            <span className="text-gray-700 font-medium">{typedReport.comment}</span>
+                        <div className="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <StatusBadge status={typedReport.status} />
+                            <span className="text-slate-700 font-medium">{typedReport.comment}</span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-slate-500">
                             Reviewed by {typedReport.reviewedBy} on {typedReport.reviewedAt ? new Date(typedReport.reviewedAt).toLocaleString() : ''}
                           </div>
                         </div>
                       );
                     })()}
-                    <div className="flex md:justify-end mb-4 w-full">
+                    <div className="flex md:justify-end mt-4 w-full">
                       <Button
                         size="sm"
-                        className="bg-pink-100 text-pink-800 hover:bg-pink-200 w-full md:w-auto"
+                        className="bg-rose-600 hover:bg-rose-700 text-white w-full md:w-auto"
                         onClick={() => setModal({ group: 'Documents', responseId: String(resp._id) })}
                       >
                         Provide Verification Report
                       </Button>
                     </div>
-                    {/* Meta Info */}
-                    <div className="flex flex-wrap gap-8 text-xs text-gray-500 mt-2">
-                      <div>Created: {resp.createdAt ? new Date(String(resp.createdAt)).toLocaleString() : ''}</div>
-                      <div>Updated: {resp.updatedAt ? new Date(String(resp.updatedAt)).toLocaleString() : ''}</div>
-                    </div>
+                  </SectionCard>
+
+                  {/* Meta Info */}
+                  <div className="flex flex-wrap gap-6 text-xs text-slate-500 py-2">
+                    <span>Created: {resp.createdAt ? new Date(String(resp.createdAt)).toLocaleString() : '—'}</span>
+                    <span>Updated: {resp.updatedAt ? new Date(String(resp.updatedAt)).toLocaleString() : '—'}</span>
+                  </div>
 
                   </div>
                 ))}
@@ -551,14 +548,14 @@ const VerificationDetailsPage = () => {
             )}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Actions</CardTitle>
+        <Card className="shadow-sm border border-slate-200">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="text-lg font-semibold text-slate-800">Actions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-4">
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap gap-3">
               <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 aria-label="Approve Verification"
                 onClick={() => setConfirmAction('approve')}
                 disabled={actionLoading}
@@ -566,6 +563,7 @@ const VerificationDetailsPage = () => {
                 Approve
               </Button>
               <Button
+                variant="destructive"
                 className="bg-red-600 hover:bg-red-700 text-white"
                 aria-label="Reject Verification"
                 onClick={() => setConfirmAction('reject')}
@@ -574,7 +572,7 @@ const VerificationDetailsPage = () => {
                 Reject
               </Button>
               <Button
-                className="bg-yellow-500 hover:bg-yellow-600 text-white"
+                className="bg-amber-500 hover:bg-amber-600 text-white"
                 aria-label="Request More Info"
                 onClick={() => setConfirmAction('request-info')}
                 disabled={actionLoading}
@@ -640,20 +638,24 @@ const ReportModal = ({
   const [comment, setComment] = useState(defaultComment);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Provide {group} Verification Report</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
+        <div className="border-b border-slate-100 bg-slate-50/80 px-6 py-4">
+          <h2 className="text-lg font-semibold text-slate-800">Provide {group} Verification Report</h2>
+          <p className="text-sm text-slate-500 mt-0.5">Set the verification outcome and add a comment.</p>
+        </div>
         <form
           onSubmit={e => {
             e.preventDefault();
             onSubmit({ status, comment });
           }}
-          className="space-y-4"
+          className="p-6 space-y-5"
         >
-          <div>
-            <label className="block font-medium mb-1">Status</label>
+          <div className="space-y-2">
+            <label htmlFor="report-status" className="block text-sm font-medium text-slate-700">Status</label>
             <select
-              className="w-full border rounded px-3 py-2"
+              id="report-status"
+              className="w-full h-11 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               value={status}
               onChange={e => setStatus(e.target.value)}
               required
@@ -663,18 +665,22 @@ const ReportModal = ({
               <option value="pending">Pending</option>
             </select>
           </div>
-          <div>
-            <label className="block font-medium mb-1">Comment</label>
+          <div className="space-y-2">
+            <label htmlFor="report-comment" className="block text-sm font-medium text-slate-700">Comment</label>
             <textarea
-              className="w-full border rounded px-3 py-2 min-h-[80px]"
+              id="report-comment"
+              className="w-full min-h-[100px] resize-y rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               value={comment}
               onChange={e => setComment(e.target.value)}
+              placeholder="e.g. Details verified; documents match records."
               required
             />
           </div>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="outline" onClick={onClose} aria-label="Cancel">Cancel</Button>
-            <Button type="submit" disabled={loading} aria-label="Submit Report">
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose} aria-label="Cancel" className="border-slate-300 text-slate-700 hover:bg-slate-50">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading} aria-label="Submit Report" className="bg-blue-600 hover:bg-blue-700 text-white">
               {loading ? 'Submitting...' : 'Submit'}
             </Button>
           </div>

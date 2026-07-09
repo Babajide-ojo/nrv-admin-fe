@@ -2,11 +2,9 @@ import axios from './axios';
 
 export interface Property {
   _id: string;
-  propertyName: string;
   streetAddress: string;
   city: string;
   state: string;
-  zipCode: string;
   propertyType: string;
   status: string;
   apartmentCount: number;
@@ -91,5 +89,5 @@ export const updateProperty = async (id: string, propertyData: Partial<Property>
 };
 
 export const deleteProperty = async (id: string): Promise<void> => {
-  await axios.delete(`/properties/${id}`);
+  await axios.delete(`/properties/delete/${id}`);
 }; 

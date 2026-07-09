@@ -74,4 +74,18 @@ export const updateDocumentsReport = async (id: string, report: { status: string
 export const verifyPhoneNumber = async (responseId: string, phone: string) => {
   const response = await api.post(`/verification/phone-verify/${responseId}`, { phone });
   return response.data.data;
+};
+
+export const verifyNin = async (responseId: string, nin: string) => {
+  const response = await api.post(`/verification/nin-verify/${responseId}`, { nin });
+  return response.data.data;
+};
+
+/** Update overall verification status (e.g. approve or reject the verification request). */
+export const updateVerification = async (
+  verificationId: string,
+  body: { status: 'approved' | 'rejected' | 'pending' }
+): Promise<Verification> => {
+  const response = await api.patch(`/verification/${verificationId}`, body);
+  return response.data.data;
 }; 

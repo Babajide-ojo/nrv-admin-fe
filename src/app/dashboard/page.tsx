@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Shield, 
@@ -8,15 +9,27 @@ import {
   Building, 
   FileText,
   ArrowRight,
-  Activity
+  Activity,
+  Clock,
 } from 'lucide-react';
-import Link from 'next/link';
 import AdminSidebarLayout from '@/components/layout/AdminSidebarLayout';
 import { getDashboardMetrics, DashboardMetrics } from '@/lib/api/dashboard';
+import { fetchVerifications } from '@/lib/api/verifications';
+import {
+  formatRelativeTime,
+  formatVerificationStatusAction,
+  mapVerificationToRow,
+  type VerificationRow,
+} from '@/lib/verification/map-verification-row';
+
+const RECENT_VERIFICATIONS_LIMIT = 5;
 
 const DashboardPage = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [recentVerifications, setRecentVerifications] = useState<VerificationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [recentLoading, setRecentLoading] = useState(true);
+  const [recentError, setRecentError] = useState<string | null>(null);
   const stats = [
     {
       title: 'Total Verifications',
@@ -62,6 +75,15 @@ const DashboardPage = () => {
     getDashboardMetrics()
       .then(setMetrics)
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchVerifications({ page: 1, limit: RECENT_VERIFICATIONS_LIMIT, sortOrder: 'desc' })
+      .then((res) => {
+        setRecentVerifications((res.data ?? []).map((item) => mapVerificationToRow(item as unknown as Record<string, unknown>)));
+      })
+      .catch(() => setRecentError('Failed to load recent verifications'))
+      .finally(() => setRecentLoading(false));
   }, []);
 
   const quickActions = [
@@ -156,42 +178,57 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Verifications */}
         <div>
-          <h2 className="text-2xl font-bold text-green-900 mb-4">Recent Activity</h2>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 className="text-2xl font-bold text-green-900">Recent Verifications</h2>
+            <Link href="/verifications" className="text-sm font-medium text-green-700 hover:underline">
+              View all
+            </Link>
+          </div>
           <Card className="bg-white/60 backdrop-blur-lg border-0 rounded-2xl">
             <CardHeader>
               <div className="flex items-center space-x-2">
                 <Activity className="w-5 h-5 text-blue-400" />
-                <CardTitle className="text-lg text-blue-900">System Activity</CardTitle>
+                <CardTitle className="text-lg text-blue-900">Latest tenant screening requests</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900">New user registration</p>
-                    <p className="text-xs text-gray-500">John Doe registered as a tenant</p>
-                  </div>
-                  <span className="text-xs text-gray-400">2 min ago</span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900">Property verification completed</p>
-                    <p className="text-xs text-gray-500">Property #12345 verified successfully</p>
-                  </div>
-                  <span className="text-xs text-gray-400">15 min ago</span>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-900">New property added</p>
-                    <p className="text-xs text-gray-500">Luxury apartment complex added</p>
-                  </div>
-                  <span className="text-xs text-gray-400">1 hour ago</span>
-                </div>
+                {recentLoading ? (
+                  <p className="py-4 text-center text-sm text-gray-500">Loading...</p>
+                ) : recentError ? (
+                  <p className="py-4 text-center text-sm text-red-500">{recentError}</p>
+                ) : recentVerifications.length === 0 ? (
+                  <p className="py-4 text-center text-sm text-gray-500">No verification requests yet.</p>
+                ) : (
+                  recentVerifications.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/verifications/${item.id}`}
+                      className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                    >
+                      <div className="rounded-full bg-green-100 p-2">
+                        <Clock className="w-4 h-4 text-green-700" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-blue-900">
+                          {formatVerificationStatusAction(item.status)}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {item.tenantName} · {item.reference}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {item.verificationType === 'premium' ? 'Premium' : 'Standard'}
+                          {item.email ? ` · ${item.email}` : ''}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs text-gray-400">
+                        {formatRelativeTime(item.createdAt)}
+                      </span>
+                    </Link>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

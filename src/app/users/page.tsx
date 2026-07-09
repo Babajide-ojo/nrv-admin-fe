@@ -69,7 +69,7 @@ const UsersPage = () => {
           </div>
           <div className="ml-3">
             <p className="font-medium text-gray-900">{row.firstName} {row.lastName}</p>
-            <p className="text-sm text-gray-500">ID: {row._id}</p>
+            <p className="text-sm text-gray-500">{row.email}</p>
           </div>
         </div>
       ),

@@ -11,7 +11,9 @@ import {
   Menu,
   X,
   FileText,
-  BarChart3
+  BarChart3,
+  UserCog,
+  KeyRound
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -39,6 +41,18 @@ const navItems = [
     label: 'Properties', 
     icon: Building,
     description: 'Manage properties and units'
+  },
+  { 
+    href: '/roles', 
+    label: 'Roles', 
+    icon: KeyRound,
+    description: 'Manage admin roles'
+  },
+  { 
+    href: '/staff', 
+    label: 'Staff', 
+    icon: UserCog,
+    description: 'Create and onboard staff'
   }
 ];
 

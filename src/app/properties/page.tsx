@@ -16,11 +16,9 @@ import DataTable, { ColumnConfig } from '@/components/ui/DataTable';
 
 interface Property {
   _id: string;
-  propertyName: string;
   streetAddress: string;
   city: string;
   state: string;
-  zipCode: string;
   propertyType?: string;
   status?: string;
   apartmentCount?: number;
@@ -88,7 +86,7 @@ const PropertiesPage = () => {
 
   const columns: ColumnConfig<Property>[] = [
     {
-      key: 'propertyName',
+      key: 'streetAddress',
       label: 'Property',
       render: (value, row) => (
         <div className="flex items-center">
@@ -96,7 +94,7 @@ const PropertiesPage = () => {
             <Building className="w-4 h-4 text-green-600" />
           </div>
           <div className="ml-3">
-            <p className="font-medium text-gray-900">{row.propertyName}</p>
+            <p className="font-medium text-gray-900">{[row.streetAddress, row.city, row.state].filter(Boolean).join(', ') || '—'}</p>
             <div className="flex items-center text-sm text-gray-500">
               <MapPin className="w-3 h-3 mr-1" />
               {row.streetAddress}, {row.city}, {row.state}
