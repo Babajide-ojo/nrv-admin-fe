@@ -56,6 +56,8 @@ const VerificationsPage = () => {
         return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
       case 'rejected':
         return <Badge className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" />Rejected</Badge>;
+      case 'declined':
+        return <Badge className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" />Declined</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" />Pending</Badge>;
       default:
@@ -113,6 +115,7 @@ const VerificationsPage = () => {
     pending: verifications.filter(v => v.status?.toLowerCase() === 'pending').length,
     approved: verifications.filter(v => v.status?.toLowerCase() === 'approved').length,
     rejected: verifications.filter(v => v.status?.toLowerCase() === 'rejected').length,
+    declined: verifications.filter(v => v.status?.toLowerCase() === 'declined').length,
   };
 
   if (loading) {
@@ -141,7 +144,7 @@ const VerificationsPage = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -190,6 +193,19 @@ const VerificationsPage = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Rejected</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.rejected}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <XCircle className="h-6 w-6 text-red-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Declined</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.declined}</p>
                 </div>
               </div>
             </CardContent>

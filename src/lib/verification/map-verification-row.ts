@@ -4,10 +4,12 @@ export interface VerificationRow {
   tenantName: string;
   email: string;
   verificationType: "standard" | "premium";
-  status: "approved" | "rejected" | "pending";
+  status: "approved" | "rejected" | "pending" | "declined";
   submittedDate: string;
   createdAt?: string;
 }
+
+const VALID_STATUSES = ["approved", "rejected", "pending", "declined"] as const;
 
 export const formatVerificationStatusAction = (
   status: VerificationRow["status"],
@@ -18,13 +20,16 @@ export const formatVerificationStatusAction = (
   if (status === "rejected") {
     return "Verification rejected";
   }
+  if (status === "declined") {
+    return "Verification declined";
+  }
   return "Verification submitted";
 };
 
 export const mapVerificationToRow = (v: Record<string, unknown>): VerificationRow => {
   const status = (v.status as string)?.toLowerCase();
-  const validStatus = ["approved", "rejected", "pending"].includes(status)
-    ? status
+  const validStatus = (VALID_STATUSES as readonly string[]).includes(status)
+    ? (status as VerificationRow["status"])
     : "pending";
   const tier = (v.verificationTier as string)?.toLowerCase();
   const verificationType =
@@ -39,7 +44,7 @@ export const mapVerificationToRow = (v: Record<string, unknown>): VerificationRo
     tenantName: `${v.firstName ?? ""} ${v.lastName ?? ""}`.trim() || "Unknown",
     email: (v.email as string) ?? "",
     verificationType: verificationType as "standard" | "premium",
-    status: validStatus as "approved" | "rejected" | "pending",
+    status: validStatus,
     submittedDate: createdAt ? new Date(createdAt).toLocaleDateString() : "—",
     createdAt,
   };

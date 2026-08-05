@@ -35,14 +35,17 @@ const SectionHeader = ({ icon: Icon, title, iconClassName = 'text-slate-500' }: 
 
 const StatusBadge = ({ status, className = '' }: { status: string; className?: string }) => {
   const s = String(status).toLowerCase();
-  const styles = s === 'approved' || s === 'completed' || s === 'success'
-    ? 'bg-emerald-100 text-emerald-800'
-    : s === 'rejected'
-    ? 'bg-red-100 text-red-800'
-    : 'bg-amber-100 text-amber-800';
+  const styles =
+    s === 'approved' || s === 'completed' || s === 'success'
+      ? 'bg-emerald-100 text-emerald-800'
+      : s === 'rejected' || s === 'declined'
+        ? 'bg-red-100 text-red-800'
+        : 'bg-amber-100 text-amber-800';
+  const label =
+    s === 'declined' ? 'Declined' : s === 'rejected' ? 'Rejected' : status;
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${styles} ${className}`}>
-      {status}
+      {label}
     </span>
   );
 };

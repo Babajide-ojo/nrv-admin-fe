@@ -77,6 +77,8 @@ const PropertiesPage = () => {
         return <Badge className="bg-green-100 text-green-800">Active</Badge>;
       case 'inactive':
         return <Badge className="bg-red-100 text-red-800">Inactive</Badge>;
+      case 'deleted':
+        return <Badge className="bg-gray-100 text-gray-800">Deleted</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
