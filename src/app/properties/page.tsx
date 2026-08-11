@@ -39,7 +39,10 @@ const PropertiesPage = () => {
     const loadProperties = async () => {
       try {
         const response = await fetchProperties();
-        setProperties(response.data);
+        const rows = (response.data || []).filter(
+          (p: Property) => String(p.status || '').toLowerCase() !== 'deleted',
+        );
+        setProperties(rows);
       } catch (error) {
         console.error('Error fetching properties:', error);
       } finally {
