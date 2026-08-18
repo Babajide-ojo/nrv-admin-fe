@@ -16,6 +16,7 @@ import {
   KeyRound
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAdminSessionIdleTimeout } from '@/hooks/useAdminSessionIdleTimeout';
 
 const navItems = [
   { 
@@ -53,12 +54,19 @@ const navItems = [
     label: 'Staff', 
     icon: UserCog,
     description: 'Create and onboard staff'
+  },
+  {
+    href: '/reports',
+    label: 'Reports',
+    icon: BarChart3,
+    description: 'Generate and export system reports',
   }
 ];
 
 const AdminSidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useAdminSessionIdleTimeout(true);
 
   return (
     <div className="flex min-h-screen bg-gray-50">
