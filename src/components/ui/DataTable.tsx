@@ -232,7 +232,9 @@ export default function DataTable<T extends BaseRow = BaseRow>({
       const queryParams = new URLSearchParams();
       
       Object.entries(filterState).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
+        if (value && value !== 'all') {
+          queryParams.append(key, value);
+        }
       });
       
       // Add search parameter if provided
