@@ -60,7 +60,13 @@ const navItems = [
     label: 'Reports',
     icon: BarChart3,
     description: 'Generate and export system reports',
-  }
+  },
+  {
+    href: '/settings',
+    label: 'Settings',
+    icon: Settings,
+    description: 'Platform credit and signup settings',
+  },
 ];
 
 const AdminSidebarLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {

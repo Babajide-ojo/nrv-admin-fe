@@ -6,10 +6,14 @@ export interface User {
   lastName: string;
   email: string;
   phoneNumber: string;
-  accountType: 'landlord' | 'tenant';
+  accountType: 'landlord' | 'tenant' | 'shortlet_manager' | string;
   status: string;
   isOnboarded: boolean;
   createdAt: string;
+  nin?: string;
+  ninLast4?: string;
+  managerNinVerifiedAt?: string;
+  shortletVerificationBalance?: number;
 }
 
 export interface FetchUsersParams {
@@ -60,4 +64,11 @@ export const updateUser = async (id: string, userData: Partial<User>): Promise<U
 
 export const deleteUser = async (id: string): Promise<void> => {
   await axios.delete(`/users/${id}`);
+};
+
+export const approveManagerNin = async (id: string): Promise<User> => {
+  const response = await axios.post<{ status: string; data: User }>(
+    `/users/${id}/vet-manager-nin`,
+  );
+  return response.data.data;
 }; 
